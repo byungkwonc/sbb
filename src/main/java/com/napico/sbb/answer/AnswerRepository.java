@@ -1,5 +1,6 @@
-package com.napico.sbb;
+package com.napico.sbb.answer;
 
+import com.napico.sbb.answer.Answer;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 // 인터페이스를 리포지토리로 만들기위해 JpaRepository 인터페이스를 상속 한다

@@ -44,14 +44,14 @@ this.questionRepository.save(q2);
 ## build.gradle
 
 ### H2 데이터베이스 설치
-```
+```groovy
 dependencies {
   runtimeOnly 'com.h2database:h2'
 }
 ```
 
 ### JPA 환경 설정
-```
+```groovy
 dependencies { 
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa' 
 }
@@ -61,11 +61,27 @@ dependencies {
 - build.gradle 파일에서 작성한 implementation은 필요한 라이브러리 설치를 위해 가장 일반적으로 사용하는 설정이다.
 - implementation은 해당 라이브러리가 변경되더라도 이 라이브러리와 연관된 모든 모듈을 컴파일하지 않고 변경된 내용과 관련이 있는 모듈만 컴파일하므로 프로젝트를 리빌드(rebuild)하는 속도가 빠르다.
 
+### JUnit 설치
+```groovy
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+```
+
+### template 엔진 설치 (Thymeleaf)
+```groovy
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+}
+```
+
 --------------------------------------
 ## application.properties
 
 ### H2 데이터베이스 사용
-```
+```yaml
 # DATABASE
 spring.h2.console.enabled=true
 spring.h2.console.path=/h2-console
@@ -83,13 +99,23 @@ spring.datasource.password=
 
 ### JPA 사용
 
-```
+```yaml
 # JPA
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect
 spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.show_sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.use_sql_comments=true
+
+# LOG
+logging.level.org.hibernate.type.descriptor.sql=trace
 ```
 - spring.jpa.properties.hibernate.dialect: 스프링 부트와 하이버네이트를 함께 사용할 때 필요한 설정 항목이다. 표준 SQL이 아닌 하이버네이트만의 SQL을 사용할 때 필요한 항목으로 하이버네이트의 org.hibernate.dialect.H2Dialect 클래스를 설정했다.
 - spring.jpa.hibernate.ddl-auto: 엔티티를 기준으로 데이터의 테이블을 생성하는 규칙을 설정한다.
+- spring.jpa.properties.hibernate.show_sql : 실행창에 JPA 구현제 Hibernate가 만들어 준 sql을 보여준다.
+- spring.jpa.properties.hibernate.format_sql : sql 예쁘게 보기
+- spring.jpa.properties.hibernate.use_sql_comments : sql에 추가적인 주석 표시하기
+- logging.level.org.hibernate.type.descriptor.sql : ?에 어떤 값이 들어갔는지 확인 하기
 
 #### spring.jpa.hibernate.ddl-auto 규칙
 - none: 엔티티가 변경되더라도 데이터베이스를 변경하지 않는다.
@@ -110,3 +136,39 @@ spring.jpa.hibernate.ddl-auto=update
 ### 리포지토리는?
 - 엔티티가 데이터베이스 테이블을 생성했다면, 리포지터리는 이와 같이 생성된 데이터베이스 테이블의 데이터들을 저장, 조회, 수정, 삭제 등을 할 수 있도록 도와주는 인터페이스이다.
 - 리포지터리는 테이블에 접근하고, 데이터를 관리하는 메서드(예를 들어 findAll, save 등)를 제공한다.
+
+--------------------------------------
+## template 사용 (Thymeleaf)
+
+### 분기문
+```thymeleafexpressions
+th:if="${question != null}"
+```
+- question 객체가 null이 아닌 경우에만 이 속성을 포함한 요소가 표시 됨
+
+### 반복문
+```thymeleafexpressions
+th:each="question : ${questionList}"
+or
+th:each="question, loop : ${questionList}"
+```
+- loop.index: 루프의 순서(루프의 반복 순서, 0부터 1씩 증가)
+- loop.count: 루프의 순서(루프의 반복 순서, 1부터 1씩 증가)
+- loop.size: 반복 객체의 요소 개수(예를 들어 questionList의 요소 개수)
+- loop.first: 루프의 첫 번째 순서인 경우 true
+- loop.last: 루프의 마지막 순서인 경우 true
+- loop.odd: 루프의 홀수 번째 순서인 경우 true
+- loop.even: 루프의 짝수 번째 순서인 경우 true
+- loop.current: 현재 대입된 객체(여기서는 question과 동일)
+
+### 텍스트 속성
+```thymeleafexpressions
+th:text="${question.subject}"
+```
+- 텍스트는 th:text 속성 대신에 다음처럼 대괄호를 사용하여 값을 직접 출력할 수 있다.
+```html
+<tr th:each="question : ${questionList}">
+    <td>[[${question.subject}]]</td>
+    <td>[[${question.createDate}]]</td>
+</tr>
+```

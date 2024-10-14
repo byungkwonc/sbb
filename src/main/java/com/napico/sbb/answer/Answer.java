@@ -1,6 +1,8 @@
-package com.napico.sbb;
+package com.napico.sbb.answer;
 
 import java.time.LocalDateTime;
+
+import com.napico.sbb.question.Question;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
