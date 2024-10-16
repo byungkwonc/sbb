@@ -49,4 +49,13 @@ public class UserController {
         }
         return "redirect:/";
     }
+
+    // 로그인
+    @GetMapping("/login")
+    public String login() {
+        return "login_form";
+        // 사용자 아이디와 비밀번호로 로그인 할 수 있는 템플릿 : ~/resources/template/login_form.html
+        // 스프링 시큐리티의 로그인이 실패할 경우 시큐리티 기능으로 인해 로그인 페이지로 리다이렉트 된다.
+        // 이때 페이지 매개변수로 error가 함께 전달된다. 따라서 로그인 페이지의 매게변수로 error가 전달된 경우 (${param.error}) 오류 메세지를 출력
+    }
 }

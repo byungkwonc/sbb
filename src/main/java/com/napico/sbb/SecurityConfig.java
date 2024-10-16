@@ -2,6 +2,8 @@ package com.napico.sbb;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,12 +22,19 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
-                .requestMatchers(new AntPathRequestMatcher("/**")).permitAll())         // 인증되지 않은 모든 페이지의 요청을 허락
+                .requestMatchers(new AntPathRequestMatcher("/**")).permitAll())             // 인증되지 않은 모든 페이지의 요청을 허락
             .csrf((csrf) -> csrf
-                .ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**")))  // H2 console의 CSRF 허용
+                .ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**")))      // H2 console의 CSRF 허용
             .headers((headers) -> headers
                 .addHeaderWriter(new XFrameOptionsHeaderWriter(
-                        XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))         // 프레임으로 구성된 URL 요청 시 X-Frame-Options 헤더를 DENY 대신 SAMEORIGIN으로 설정
+                    XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))                   // 프레임으로 구성된 URL 요청 시 X-Frame-Options 헤더를 DENY 대신 SAMEORIGIN으로 설정
+            .formLogin((formLogin) -> formLogin
+                .loginPage("/user/login")
+                .defaultSuccessUrl("/"))                                                        // 로그인 성공시 루트(/)로 이동
+            .logout((logout) -> logout
+                .logoutRequestMatcher(new AntPathRequestMatcher("/user/logout"))
+                .logoutSuccessUrl("/")
+                .invalidateHttpSession(true))                                                   // 로그아웃 시 생성된 사용자 세션 삭제 후 루트(/) 이동
         ;
         return http.build();
     }
@@ -35,5 +44,11 @@ public class SecurityConfig {
                     // BcryptPasswordEncoder 객체를 직접 생성하여 사용하지 않고 빈으로 등록한 Password Encoder 객체를 주입받아 사용할 수 있음
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean           // AuthenticationManager는 스프링 시큐리티의 인증을 처리
+                    // AuthenticationManager는 사용자 인증 시 UserSecurityService와 PasswordEncoder를 내부적으로 사용하여 인증과 권한 부여 프로세스를 처리
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }

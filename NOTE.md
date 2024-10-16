@@ -241,6 +241,30 @@ th:text="${question.subject}"
 
 - 스프링 시큐리티는 스프링 기반 웹 애플리케이션의 인증과 권한을 담당하는 스프링의 하위 프레임워크이다.
 - 인증(authenticate)은 로그인과 같은 사용자의 신원을 확인하는 프로세스를, 권한(authorize)은 인증된 사용자가 어떤 일을 할 수 있는지(어떤 접근 권한이 있는지) 관리
+- 스프링 시큐리티는 기본적으로 세션 & 쿠키 방식으로 인증
+- 인증 관리자(Authentication Manager)와 접근 결정 관리자(Access Decision Manger)를 통해 사용자의 리소스 접근을 관리
+  - 인증 관리자는 UsernamePasswordAuthenticationFilter가 수행
+  - 접근 결정 관리자는 FilterSecurityInterceptor가 수행
+
+### 필터
+- 클라이언트와 자원 사이에서 요청과 응답 정보를 이용해 다양한 처리를 하는 목적
+- 기본 제공되는 필터 : Security Filter Chain
+  - SecurityContextPersistenceFilter : SecurityContextRepository에서 SecurityContext를 가져오거나 저장하는 역할
+  - LogoutFilter : 설정된 로그아웃 URL로 오는 요청을 감시하며, 해당 유저를 로그아웃 처리
+  - (UsernamePassword)AuthenticationFilter : (아이디와 비밀번호를 사용하는 form 기반 인증) 설정된 로그인 URL로 오는 요청을 감시하며, 유저 인증 처리 
+    - Authentication Manager를 통한 인증 실행
+    - 인증 성공 시, 얻은 Authentication 객체를 SecurityContext에 저장 후 AuthenticationSuccessHandler 실행
+    - 인증 실패 시, AuthenticationFailureHandler 실행
+  - DefaultLoginPageGeneratingFilter : 폼기반 또는 OpenID기반 인증에 사용하는 가상 URL에 대한 요청을 감시하고 로그인 폼 기능을 수행하는데 필요한 HTML을 생성
+  - BasicAuthenticationFilter : HTTP 기본 인증 헤더를 감시하여 처리
+  - RequestCacheAwareFilter : 로그인 성공 이후, 원래 인증 요청에 의해 가로채어진 사용자의 원래 요청을 재구성하는데 사용
+  - SecurityContextHolderAwareRequestFilter : HttpServletRequestWrapper를 상속한 SecurityContextHolderAwareRequestWapper 클래스로 HttpServletRequest 정보를 감싼다. SecurityContextHolderAwareRequestWrapper 클래스는 필터 체인상의 다음 필터들에게 부가정보를 제공
+  - AnonymousAuthenticationFilter : 이 필터가 호출되는 시점까지 사용자 정보가 인증되지 않았다면 인증토큰에 사용자가 익명 사용자로 나타난다.
+  - SessionManagementFilter : 인증된 주체를 바탕으로 세션 트래킹을 처리해 단일 주체와 관련한 모든 세션들이 트래킹되도록 도움
+  - ExceptionTranslationFilter : 이 필터는 보호된 요청을 처리하는 중에 발생할 수 있는 예외의 기본 라우팅과 위임, 전달하는 역할을 한다.
+  - FilterSecurityInterceptor : 이 필터는 Access Decision Manager 로 권한부여 처리를 위임함으로써 접근 제어 결정을 쉽게해준다.
+
+### sbb 프로젝트 구성
 - 스프링 시큐리티는 기본적으로 인증되지 않은 사용자가 SBB와 같은 웹 서비스를 사용할 수 없게끔 만든다. 따라서 최조 접속 시 인증을 위한 로그인 화면이 나타난다.
 - 스프링 시큐리티는 웹 사이트의 콘텐츠가 다른 사이트에 포함되지 않도록 하기 위해 X-Frame-Options 헤더의 기본값을 DENY로 사용하는데, 프레임 구조의 웹 사이트는 이 헤더의 값이 DENY인 경우 오류가 발생한다.
 - 스프링 부트에서 X-Frame-Options 헤더는 클릭재킹 공격을 막기 위해 사용한다. 클릭재킹은 사용자의 의도와 다른 작업이 수행되도록 속이는 보안 공격 기술이다.
@@ -253,3 +277,20 @@ th:text="${question.subject}"
 - 스프링 시큐리티는 페이지에 CSRF 토큰을 발행하여 이 값이 다시 서버로 정확하게 들어오는지를 확인하는 과정을 거친다.
 - 만약 CSRF 토큰이 없거나 해커가 임의의 CSRF 토큰을 강제로 만들어 전송한다면 스프링 시큐리티에 의해 차단될 것이다.
 - H2 콘솔은 스프링 프레임워크가 아니므로 CSRF 토큰을 발행하는 기능이 없어 이와 같은 403 오류가 발생
+
+### 인증
+- 제공 방식 : 폼 기반 로그인, OAuth, LDAP 등
+- 설정 (SecurityConfig 클래스)
+  - HttpSecurity 객체를 사용하여 인증 방식, 로그인 페이지, 로그아웃 처리 등을 설정
+  - formLogin() 메서드를 사용하여 폼 기반 로그인을 활성화
+- 사용자 인증 정보 관리 (UserDetailsService 인터페이스)
+  - 스프링 시큐리티는 사용자 인증 정보를 UserDetails 객체로 관리
+  - loadUserByUsername(String username) 메서드를 통해 사용자의 인증 정보를 불러오는 역할
+  - BCryptPasswordEncoder와 같은 패스워드 인코더를 사용하여 사용자의 비밀번호를 안전하게 관리할 수 있음
+
+#### 인증테스트
+- MockMvc
+  - 컨트롤러 테스트
+  - perform(post("/login").param("username", "user").param("password", "password"))와 같은 코드를 사용하여 로그인 요청을 테스트
+- SpringBootTest
+  - 통합 테스트
