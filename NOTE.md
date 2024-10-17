@@ -168,6 +168,39 @@ logging.level.org.hibernate.type.descriptor.sql=trace
   - 이러한 이유로 Question, Answer 같은 엔티티 클래스는 컨트롤러에서 사용하지 않도록 설계하는 것이 좋다. 그래서 Question, Answer를 대신해 사용할 DTO (Data Transfer Object) 클래스가 필요하다. 그리고 Question, Answer 등의 엔티티 객체를 DTO 객체로 변환하는 작업도 필요하다. 그러면 엔티티 객체를 DTO 객체로 변환하는 일은 어디서 처리해야 할까? 이때도 서비스가 필요하다. 서비스는 컨트롤러와 리포지터리의 중간에서 엔티티 객체와 DTO 객체를 서로 변환하여 양방향에 전달하는 역할을 한다.
 
 --------------------------------------
+## 자료구조
+
+### Collection(컬렉션)
+- 데이터의 집합,그룹
+- JCF(Java Collection Framework)는 다수의 데이터를 쉽고 효과적으로 처리할 수 있는 표준화된 방법을 제공하는 클래스의 집합
+- 주요 인터페이스 : List, Set, Map
+
+### List
+- 입력 순서를 유지하며, 데이터의 중복을 허용
+- 인덱스를 통해 저장 데이터에 접근이 가능
+- 구현체
+  - ArrayList : 단반향 포인터 구조 데이터 순차적 접근(조회)가 빠름
+  - LinkedList : 양방향 포인터 구조 데이터 삽입, 삭제가 빠름
+
+### Set
+- 입력 순서를 유지하지 않으며, 데이터의 중복 허용하지 않음
+- 데이터에 null 입력 가능하나, 한 번만 저장하고 중복 저장을 허용하지 않음
+- 인덱스가 따로 존재하지 않기 때문에 Iterator를 사용하여 조회
+- 구현체
+  - HashSet : 입력 순서를 보장하지 않으며, 데이터의 중복을 허용하지 않음
+  - LinkedHashSet : 입력 순서를 보장하며, 데이터의 중복을 허용하지 않음
+  - TreeSet : (default) 입력한 데이터의 크기가 비교 가능한 경우 오름차순으로 정렬되며 데이터의 중복을 허용하지 않음. 입력하는 데이터가 사용자 정의 객체인 경우 Comparable을 구현하여 정렬 기준 설정 가능
+
+### Map
+- Key&Value 구조
+- Key(키)는 입력 순서를 유지하지 않으며, 중복을 허용하지 않음, Value(값)는 중복을 허용
+- 인덱스가 따로 존재하지 않기 때문에 Iterator를 사용하여 조회
+- 구현체
+  - HashMap : Key(키)에 대한 입력 순서를 보장하지 않으며, 중복 Key(키)를 허용하지 않음
+  - LinkedHashMap : Key(키)에 대한 입력 순서를 보장하며, 중복 Key(키)를 허용하지 않음
+  - TreeMap : 레드-블랙 트리(Red-Black Tree)를 기반으로 Key&Value를 저장. (default) 입력한 Key(키)데이터의 크기가 비교 가능한 경우 오름차순으로 정렬되며, 중복 Key(키)를 허용하지 않음. 입력하는 데이터가 사용자 정의 객체인 경우 Comparable을 구현하여, 정렬 기준 설정 가능
+
+--------------------------------------
 ## template 사용 (Thymeleaf)
 
 ### 분기문
@@ -202,6 +235,11 @@ th:text="${question.subject}"
     <td>[[${question.createDate}]]</td>
 </tr>
 ```
+- 마크다운으로 변환된 HTML 문서를 제대로 표시하려면 이스케이프 처리를 하지 않고 출력하는 th:utext를 사용
+```thymeleafexpressions
+th:utext="${@commonUtil.markdown(answer.content)}"
+```
+
 
 --------------------------------------
 ## bootstrap class

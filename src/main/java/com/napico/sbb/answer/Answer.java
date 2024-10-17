@@ -1,14 +1,17 @@
 package com.napico.sbb.answer;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import com.napico.sbb.question.Question;
+import com.napico.sbb.user.SiteUser;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToMany;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,10 +23,11 @@ public class Answer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT COMMENT '답변 내용'")
     private String content;
 
     private LocalDateTime createDate;
+    private LocalDateTime modifyDate;
 
     // 질문 엔티티를 참조하기 위해 question 속성을 추가
     // 답변을 통해 질문의 제목을 알고 싶다면 answer.getQuestion().getSubject()를 사용해 접근할 수 있다.
@@ -35,4 +39,12 @@ public class Answer {
     // @ManyToOne은 부모 자식 관계를 갖는 구조에서 사용한다. 여기서 부모는 Question, 자식은 Answer라고 할 수 있다.
     @ManyToOne
     private Question question;
+
+    // 답변 작성자
+    @ManyToOne
+    private SiteUser author;
+
+    // 추천인. question과 동일. ANSWER_VOTER 테이블생성됨. ANSWER_ID, VOTER_ID
+    @ManyToMany
+    Set<SiteUser> voter;
 }
