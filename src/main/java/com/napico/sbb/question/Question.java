@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.napico.sbb.answer.Answer;
+import com.napico.sbb.comment.Comment;
 import com.napico.sbb.user.SiteUser;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -53,4 +54,8 @@ public class Question {
     // QUESTION_VOTER 테이블생성됨. QUESTION_ID, VOTER_ID
     @ManyToMany
     Set<SiteUser> voter;
+
+    // 질문에 대한 댓글
+    @OneToMany(mappedBy = "question")
+    private List<Comment> commentList;
 }

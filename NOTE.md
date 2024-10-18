@@ -201,6 +201,205 @@ logging.level.org.hibernate.type.descriptor.sql=trace
   - TreeMap : 레드-블랙 트리(Red-Black Tree)를 기반으로 Key&Value를 저장. (default) 입력한 Key(키)데이터의 크기가 비교 가능한 경우 오름차순으로 정렬되며, 중복 Key(키)를 허용하지 않음. 입력하는 데이터가 사용자 정의 객체인 경우 Comparable을 구현하여, 정렬 기준 설정 가능
 
 --------------------------------------
+## 의존성 주입 DI(Dependency Injection)
+
+### 생성자 주입(Constructor Injection)
+- 스프링 팀에서도 권장하는 방식
+- 스프링 프레임워크 4.3 버전부터는 의존성 주입으로부터 클래스를 완벽하게 분리할 수 있다. 단일 생성자인 경우에는 @Autowired 어노테이션 조차 붙이지 않아도 되지만 생성자가 2개 이상인 경우에는 생성자에 어노테이션을 붙여주어야 한다.
+- 생성자로 객체를 생성하는 시점에 필요한 빈을 주입한다. 먼저 생성자의 인자에 사용되는 빈을 찾거나 빈 팩터리에서 만든다. 그 후에 찾은 인자 빈으로 주입하려는 빈의 생성자를 호출한다. 즉, 먼저 빈을 생성하지 않는다.
+```java
+@Component
+public class MadExample {
+
+    // final로 선언할 수 있는 보너스
+    private final HelloService helloService;
+
+    // 단일 생성자인 경우는 추가적인 어노테이션이 필요 없다.
+    public MadExample(HelloService helloService) {
+        this.helloService = helloService;
+    }
+}
+```
+
+### 필드 주입(Field Injection)
+- 필드에 @Autowired 어노테이션을 붙여주면 자동으로 의존성이 주입된다. 편리.
+- 수정자 주입 방법과 동일하게 먼저 빈을 생성한 후에 어노테이션이 붙은 필드에 해당하는 빈을 찾아서 주입하는 방법이다. 그러니까, 먼저 빈을 생성한 후에 필드에 대해서 주입한다.
+```java
+@Component
+public class MadExample {
+
+    @Autowired
+    private HelloService helloService;
+}
+```
+
+### 수정자 주입(Setter Injection)
+- 꼭 setter 메서드일 필요는 없다. 메서드 이름이 수정자 네이밍 패턴(setXXXX)이 아니어도 동일한 기능을 하면 된다.
+- 우선 주입(inject) 받으려는 빈의 생성자를 호출하여 빈을 찾거나 빈 팩터리에 등록한다. 그 후에 생성자 인자에 사용하는 빈을 찾거나 만든다. 그 이후에 주입하려는 빈 객체의 수정자를 호출하여 주입한다.
+```java
+@Component
+public class MadExample {
+
+    private HelloService helloService;
+
+    @Autowired
+    public void setHelloService(HelloService helloService) {
+        this.helloService = helloService;
+    }
+}
+```
+
+### Remove "field injection" and use "constructor injection" instead 인텔리제이 경고 메시지
+- 순환 참조 방지
+  - 순환 참조는 생성자 주입에서만 문제가 된다. 객체 생성 시점에 빈을 주입하기 때문에 서로 참조하는 객체가 생성되지 않은 상태에서 그 빈을 참조하기 때문에 오류가 발생
+  - 순환 참조가 있는 객체 설계는 잘못된 설계이기 때문에 생성자 주입을 사용하여 순환 참조되는 설계를 사전에 막아야 한다.
+```java
+// 첫번째 class
+@Service
+public class MadPlayService {
+
+    // 순환 참조
+    @Autowired
+    private MadLifeService madLifeService;
+
+    public void sayMadPlay() {
+        madLifeService.sayMadLife();
+    }
+}
+// 두번째 class
+@Service
+public class MadLifeService {
+    
+    // 순환 참조
+    @Autowired
+    private MadPlayService madPlayService;
+
+    public void sayMadLife() {
+        madPlayService.sayMadPlay();
+    }
+}
+// 실행 : CommandLineRunner
+@SpringBootApplication
+public class DemoApplication implements CommandLineRunner {
+
+  @Autowired
+  private MadLifeService madLifeService;
+  @Autowired
+  private MadPlayService madPlayService;
+
+  @Override
+  public void run(String... args) {
+    madPlayService.sayMadPlay();
+    madLifeService.sayMadLife();
+  }
+
+  public static void main(String[] args) {
+    SpringApplication.run(DemoApplication.class, args);
+  }
+}
+// 실행결과 : run이 수행 되면서 오류와 함께 종료
+java.lang.StackOverflowError: null
+    at com.example.demo.GreetService.sayGreet(GreetService.java:12) ~[classes/:na]
+    at com.example.demo.HelloService.sayHello(HelloService.java:12) ~[classes/:na]
+    at com.example.demo.GreetService.sayGreet(GreetService.java:12) ~[classes/:na]
+    at com.example.demo.HelloService.sayHello(HelloService.java:12) ~[classes/:na]
+    at com.example.demo.GreetService.sayGreet(GreetService.java:12) ~[classes/:na]
+```
+
+```java
+// 생성자 주입으로 코드 변경
+
+// 첫번째 class
+@Service
+public class MadPlayService {
+  private final MadLifeService madLifeService;
+
+  public MadPlayService(MadLifeService madLifeService) {
+    this.madLifeService = madLifeService;
+  }
+
+  // 생략
+}
+// 두번째 class
+@Service
+public class MadLifeService {
+  private final MadPlayService madPlayService;
+
+  public MadLifeService(MadPlayService madPlayService) {
+    this.madPlayService = madPlayService;
+  }
+
+  // 생략
+}
+// 실행결과 : BeanCurrentlyInCreationException이 발생하며 애플리케이션이 구동조차 되지 않는다
+Description:
+The dependencies of some of the beans in the application context form a cycle:
+        ┌─────┐
+        |  madLifeService defined in file [~~~/MadLifeService.class]
+        ↑     ↓
+        |  madPlayService defined in file [~~~/MadPlayService.class]
+        └─────┘
+```
+- 테스트에 용이
+  - 생성자 주입을 사용하게 되면 테스트 코드를 조금 더 편리하게 작성할 수 있다.
+  - DI의 핵심은 관리되는 클래스가 DI 컨테이너에 의존성이 없어야 한다는 것이다. 즉, 독립적으로 인스턴스화가 가능한 POJO(Plain Old Java Ojbect) 여야 한다는 것이다.
+  - DI 컨테이너를 사용하지 않고서도 단위 테스트에서 인스턴스화할 수 있어야 한다.
+  - 생성자 주입을 사용하면 테스트가 조금 더 편리하다고 생각하면 좋을 것 같다. Mockito(@Mock과 @spy 같은)를 적절히 섞어서 테스트를 할 수 있지만 생성자 주입을 사용한 경우 매우 간단한 코드를 만들 수 있다.
+```java
+SomeObject someObject = new SomeObject();
+MadComponent madComponent = new MadComponent(someObject);
+madComponent.someMadPlay();
+```
+- 코드 냄새를 없앤다
+  - 한 개의 컴포넌트가 수많은 의존성을 갖는 역할을 할 수 있다. 생성자 주입을 사용하게 되는 경우 생성자의 인자가 많아짐에 따라 복잡한 코드가 됨을 쉽게 알 수 있고 리팩토링하여 역할을 분리하는 등과 같은 코드의 품질을 높이는 활동의 필요성을 더 쉽게 알 수 있다.
+- 불변성(Immutability)
+  - 필드 주입과 수정자 주입은 해당 필드를 final로 선언할 수 없다. 따라서 초기화 후에 빈 객체가 변경될 수 있지만 생성자 주입의 경우는 다르다. 필드를 final로 선언할 수 있다.
+  - 물론 런타임 환경에서 객체를 변경하는 경우가 있을까 싶지만 이로 인해 발생할 수 있는 오류를 사전에 미리 방지할 수 있다.
+```java
+@Service
+public class MadPlayService {
+    private final MadPlayRepository madPlayRepository;
+
+    public MadPlayService(MadPlayRepository madPlayRepository) {
+        this.madPlayRepository = madPlayRepository;
+    }
+}
+```
+- 오류를 방지할 수 있다
+  - 스프링 레퍼런스에는 강제화되는 의존성의 경우는 생성자 주입 형태를 사용하고 선택적인 경우에는 수정자 주입 형태를 사용하는 것을 권장한다.
+  - 불변 객체나 null이 아님을 보장할 때는 반드시 생성자 주입을 사용해야 한다.
+```java
+@Service
+public class MadPlayService {
+    @Autowired
+    private MadPlayRepository madPlayRepository;
+
+    public void someMethod() {
+        // final이 아니기 때문에 값을 변경할 수 있다.
+        madPlayRepository = null;
+        madPlayRepository.call();
+    }
+}
+// 필드 주입을 사용했기 때문에 선언된 필드는 final이 아니다. 따라서 런타임 시점에 변경할 수 있다.
+// null을 참조하도록 변경했기 때문에 이어지는 코드에서 NullPointerException이 발생할 것이다.
+// 하지만 생성자 주입을 사용한다면 이와 같은 상황을 컴파일 시점에 방지할 수 있다.
+
+@Service
+public class MadPlayService {
+    private final MadPlayRepository madPlayRepository;
+
+    public MadPlayService(MadPlayRepository madPlayRepository) {
+        this.madPlayRepository = madPlayRepository;
+    }
+
+    public void someMethod() {
+        // cannot assign a value to final variable
+        madPlayRepository = null;
+    }
+}
+```
+
+--------------------------------------
 ## template 사용 (Thymeleaf)
 
 ### 분기문

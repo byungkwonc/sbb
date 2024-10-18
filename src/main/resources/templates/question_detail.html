@@ -34,11 +34,30 @@
                    th:if="${question.author != null and #authentication.getPrincipal().getUsername() == question.author.username}"
                    th:text="삭제"></a>
             </div>
+            <!-- 질문 댓글 Start -->
+            <div class="mt-3" th:if="${not #lists.isEmpty(question.commentList)}">
+                <div th:each="comment,index : ${question.commentList}" class="comment py-2 text-muted">
+                    <span style="white-space: pre-line;" th:text="${comment.content}"></span>
+                    <span th:if="${comment.modifyDate != null}"
+                          th:text="| - ${comment.author.username}, ${#temporals.format(comment.createDate, 'yyyy-MM-dd HH:mm')} (수정: ${#temporals.format(comment.modifyDate, 'yyyy-MM-dd HH:mm')})|"></span>
+                    <span th:if="${comment.modifyDate == null}"
+                          th:text="| - ${comment.author.username}, ${#temporals.format(comment.createDate, 'yyyy-MM-dd HH:mm')}|"></span>
+                    <a sec:authorize="isAuthenticated()"
+                       th:if="${#authentication.getPrincipal().getUsername() == comment.author.username}"
+                       th:href="@{|/comment/modify/${comment.id}|}" class="small">수정</a>,
+                    <a sec:authorize="isAuthenticated()"
+                       th:if="${#authentication.getPrincipal().getUsername() == comment.author.username}"
+                       href="javascript:void(0);" class="small delete" th:data-uri="@{|/comment/delete/${comment.id}|}">삭제</a>
+                </div>
+            </div>
+            <div>
+                <a th:href="@{|/comment/create/question/${question.id}|}" class="small"><small>댓글 추가 ..</small></a>
+            </div>
+            <!-- 질문 댓글 End -->
         </div>
     </div>
     <!-- 답변의 갯수 표시 -->
-    <h5 class="border-bottom my-3 py-2"
-        th:text="|${#lists.size(question.answerList)}개의 답변이 있습니다.|"></h5>
+    <h5 class="border-bottom my-3 py-2" th:text="|${#lists.size(question.answerList)}개의 답변이 있습니다.|"></h5>
     <!-- 답변 반복 시작 -->
     <div class="card my-3" th:each="answer : ${question.answerList}">
         <a th:id="|answer_${answer.id}|"></a>
@@ -85,7 +104,7 @@
     </form>
 </div>
 <script layout:fragment="script" type='text/javascript'>
-    // 질문, 답변 삭제 확인
+    // 질문, 답변, 댓글 삭제 확인
     const delete_elements = document.getElementsByClassName("delete");
     Array.from(delete_elements).forEach(function(element) {
         element.addEventListener('click', function() {

@@ -17,11 +17,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 //import org.springframework.web.bind.annotation.ResponseBody;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
 import com.napico.sbb.answer.AnswerForm;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
+    // 사용자 로그 작성
 @RequestMapping("/question")
     // QuestionController에 속하는 URL 매핑은 항상 /question 프리픽스로 시작하도록 설정
     // QuestionController 클래스명 위에 다음과 같이 @RequestMapping("/question") 애너테이션을 추가하고, 메서드 단위에서는 /question을 생략하고 그 뒷부분만을 적으면 된다.
@@ -44,7 +47,9 @@ public class QuestionController {
     public String list(Model model, @RequestParam(value="page", defaultValue = "1") int page, @RequestParam(value="kw", defaultValue = "") String kw) {
         //return "question list";           // java code를 직접 브라우저에 리턴
 
-        // template를 써보자. 템플릿 엔진은 Thymeleaf, Mustache, Groovy, Freemarker, Velocity 등이 있다.
+        // 사용자 로그 작성
+        // 로그 레벨(log level) 6단계 : log.trace, log.debug, log.info, log.warn, log.error, log.fatal
+        log.info("page:{}, kw:{}", page, kw);
 
         // QuestionRepository로 조회한 질문 목록 데이터인 questionList를 생성
         //List<Question> questionList = this.questionRepository.findAll();
@@ -61,6 +66,7 @@ public class QuestionController {
         // 검색 데이터(kw)는 Model 클래스를 사용 하여 "kw"라는 이름으로 템플릿에 전달
         model.addAttribute("kw", kw);
 
+        // template를 써보자. 템플릿 엔진은 Thymeleaf, Mustache, Groovy, Freemarker, Velocity 등이 있다.
         // 템플릿 파일 이름인 question_list를 리턴
         return "question_list";
     }

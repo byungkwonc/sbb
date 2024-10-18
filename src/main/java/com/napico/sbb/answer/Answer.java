@@ -1,17 +1,13 @@
 package com.napico.sbb.answer;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
+import com.napico.sbb.comment.Comment;
 import com.napico.sbb.question.Question;
 import com.napico.sbb.user.SiteUser;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,4 +43,8 @@ public class Answer {
     // 추천인. question과 동일. ANSWER_VOTER 테이블생성됨. ANSWER_ID, VOTER_ID
     @ManyToMany
     Set<SiteUser> voter;
+
+    // 답변에 대한 댓글 기능
+    @OneToMany(mappedBy = "answer")
+    private List<Comment> commentList;
 }
