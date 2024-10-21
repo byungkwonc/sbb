@@ -38,6 +38,24 @@
 - 컴퓨트 > 인스턴스 > 인스턴스 세부정보 > 연결된 VNIC > VNIC 세부정보 > IPv4 주소
   - 전용 IP 주소 편집 : 공용IP없음 - update - 예약된 공용 IP : 기존 예약된 IP 주소 선택 - update
 - PublicIP : 129.154.51.235
+## SSH private key
+- 인스턴스 생성 시 다운로드
+- SSH, SFTP Client : Terminus
+
+## 최초 서버 설정
+- cloud shell 접속 : byungkwonc
+  - ssh key upload
+  - ssh -i {ssh_key} opc@129.154.51.235
+  - instance에 opc 계정으로 접속 후 root 계정 암호 설정
+    - sudo su | passwd
+- 시간 설정
+  - date
+  - sudo ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+  - date
+- (미적용) 호스트명 변경
+  - sudo hostnamectl set-hostname sbb
+  - sudo reboot
+  - hostname
 ## 방화벽 해제
 - 컴퓨트 > 인스턴스 > 서브넷 or 네트워킹 > 가상 클라우드 네트워크 > 가상 클라우드 네트워크 세부정보 > 서브넷
 - 보안목록 (Default Security List for vcn-20240731-1915)
@@ -45,35 +63,23 @@
 - instance SSH 접속 후 iptables 수정
   - 네트워크 인터페이스 이름 확인 : ifconfig
   - 보안 정책 확인 : sudo iptables --list
-  - 보안 정책 추가
+  - 보안 정책 추가 (./iptables.sh)
     - sudo iptables -I INPUT 1 -i ens3 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
       sudo iptables -I INPUT 2 -i ens3 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
       sudo iptables -I INPUT 3 -i ens3 -p tcp --dport 8080 -m state --state NEW,ESTABLISHED -j ACCEPT
-- 보안 정책 유지
+- (미적용) 보안 정책 유지
   - sudo yum install netfilter-persistent햣
   - netfilter-persistent save
   - netfilter-persistent start
-## SSH private key
-- 인스턴스 생성 시 다운로드
-- SSH, SFTP Client : Terminus
-- instance에 opc 계정으로 접속 후 root 계정 암호 설정
-  - sudo su | passwd 
 ## 배포
-- 호스트명 변경
-  - sudo hostnamectl set-hostname sbb
-  - sudo reboot
-  - hostname
-- 시간 설정
-  - date
-  - sudo ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
-  - date
 - java 설치
   - java -version
-  - sudo apt update
-  - sudo apt install openjdk-19 -jdk
+  - sudo dnf update
+  - dnf search openjdk
+  - sudo dnf install java-1.8.0-openjdk-devel
   - java -version
 - 프로젝트 디렉터리 설정
-  - /home/ubuntu > mkdir sbb
+  - /home/opc > mkdir sbb
 - 프로젝트 배포 파일 생성
   - Gradle Task
   - name : sbb
@@ -83,7 +89,7 @@
   - /home/ubuntu/sbb/sbb-0.0.1-SNAPSHOT.jar
 - SSH 실행
   - /home/ubuntu/sbb > java -jar sbb-0.0.1-SNAPSHOT.jar
-    - http://43.202.195.94:8080/
+    - http://129.154.51.235:8080/
 
 ## 백그라운드 서비스
 - nano start.ssh
