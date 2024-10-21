@@ -50,7 +50,7 @@
       sudo iptables -I INPUT 2 -i ens3 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
       sudo iptables -I INPUT 3 -i ens3 -p tcp --dport 8080 -m state --state NEW,ESTABLISHED -j ACCEPT
 - 보안 정책 유지
-  - sudo yum install iptables-persistent (or netfilter-persistent)
+  - sudo yum install netfilter-persistent햣
   - netfilter-persistent save
   - netfilter-persistent start
 ## SSH private key
