@@ -38,7 +38,7 @@ public class SecurityConfig {
             .headers((headers) -> headers
                 .addHeaderWriter(new XFrameOptionsHeaderWriter(
                     XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
-                // 로그인 성공시 루트(/)로 이동
+                // 로그인 페이지의 URL은 /user/login이고, 로그인 성공시 루트(/)로 이동
             .formLogin((formLogin) -> formLogin
                 .loginPage("/user/login")
                 .defaultSuccessUrl("/"))

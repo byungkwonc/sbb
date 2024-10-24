@@ -29,21 +29,30 @@
 
 # 서비스
 
-## 오라클 클라우드 가입
-- byungkwonc
-## 인스턴스 생성
+----------------------------------------------------------------------------
+## 인스턴스 (오라클 클라우드)
+
+### 인스턴스 생성
 - 컴퓨트 > 인스턴스 > 인스턴스생성
-## 퍼블릭 고정 IP 확보
+### 퍼블릭 고정 IP 확보
 - 네트워킹 > IP관리 > 예약된 퍼블릭 IP > 퍼블릭 IP 예약
 - 컴퓨트 > 인스턴스 > 인스턴스 세부정보 > 연결된 VNIC > VNIC 세부정보 > IPv4 주소
   - 전용 IP 주소 편집 : 공용IP없음 - update - 예약된 공용 IP : 기존 예약된 IP 주소 선택 - update
 - PublicIP : 129.154.51.235
-## SSH private key
+### SSH private key
 - 인스턴스 생성 시 다운로드
 - SSH, SFTP Client : Terminus
 
-## 최초 서버 설정
-- cloud shell 접속 : byungkwonc
+## 인스턴스 (Private VM)
+
+## Ubuntu 설치
+- 10.10.60.74
+  - Windows 10.0.19045.5011
+- PS>wsl --install -d Ubuntu
+
+----------------------------------------------------------------------------
+## 최초 서버 설정 (오라클 클라우드)
+- SSH 접속 : byungkwonc
   - ssh key upload
   - ssh -i {ssh_key} opc@129.154.51.235
   - instance에 opc 계정으로 접속 후 root 계정 암호 설정
@@ -56,50 +65,111 @@
   - sudo hostnamectl set-hostname sbb
   - sudo reboot
   - hostname
-## 방화벽 해제
-- 컴퓨트 > 인스턴스 > 서브넷 or 네트워킹 > 가상 클라우드 네트워크 > 가상 클라우드 네트워크 세부정보 > 서브넷
-- 보안목록 (Default Security List for vcn-20240731-1915)
-  - INBOUND : TCP - 0.0.0.0/0 (any) - 80, 8080, 443
-- instance SSH 접속 후 iptables 수정
-  - 네트워크 인터페이스 이름 확인 : ifconfig
-  - 보안 정책 확인 : sudo iptables --list
-  - 보안 정책 추가 (./iptables.sh)
-    - sudo iptables -I INPUT 1 -i ens3 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
-      sudo iptables -I INPUT 2 -i ens3 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
-      sudo iptables -I INPUT 3 -i ens3 -p tcp --dport 8080 -m state --state NEW,ESTABLISHED -j ACCEPT
-- (미적용) 보안 정책 유지
-  - sudo yum install netfilter-persistent햣
-  - netfilter-persistent save
-  - netfilter-persistent start
-## 배포
+- 방화벽 해제
+  - 컴퓨트 > 인스턴스 > 서브넷 or 네트워킹 > 가상 클라우드 네트워크 > 가상 클라우드 네트워크 세부정보 > 서브넷
+  - 보안목록 (Default Security List for vcn-20240731-1915)
+    - INBOUND : TCP - 0.0.0.0/0 (any) - 80, 8080, 443
+  - instance SSH 접속 후 iptables 수정
+    - 네트워크 인터페이스 이름 확인 : ifconfig
+    - 보안 정책 확인 : sudo iptables --list
+    - 보안 정책 추가 (./iptables.sh)
+      - sudo iptables -I INPUT 1 -i ens3 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+        sudo iptables -I INPUT 2 -i ens3 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+        sudo iptables -I INPUT 3 -i ens3 -p tcp --dport 8080 -m state --state NEW,ESTABLISHED -j ACCEPT
+  - (미적용) 보안 정책 유지
+    - sudo yum install netfilter-persistent
+    - netfilter-persistent save
+    - netfilter-persistent start
 - java 설치
-  - java -version
   - sudo dnf update
-  - dnf search openjdk
   - sudo dnf install java-1.8.0-openjdk-devel
   - java -version
 - 프로젝트 디렉터리 설정
   - /home/opc > mkdir sbb
+
+## 최초 서버 설정 (Private VM)
+- 계정 설정
+  - root@qudrnjs~# passwd
+  - adduser sbb
+- sudoers 등록
+  - su -
+  - vi /etc/sudoers
+    - sbb ALL=(ALL:ALL) ALL
+    - :wq!
+- java 설치
+  - sudo apt update
+  - sudo apt install openjdk-17-jdk
+- 방화벽 및 포트 포워딩
+  - sudo apt update
+  - sudo apt install net-tools
+    - eth0 : 10.10.60.74
+  - sudo apt install openssh-server
+    - sudo vim /etc/ssh/sshd_config
+      - # Port 22 주석 해제
+      - # PasswordAuthentication yes 주석 해제
+      - sudo service ssh --full-restart
+  - host machine
+```shell
+$remoteport = bash.exe -c "ifconfig eth0 | grep 'inet '"
+$found = $remoteport -match '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}';
+
+if( $found ){
+  $remoteport = $matches[0];
+} else{
+  echo "The Script Exited, the ip address of WSL 2 cannot be found";
+  exit;
+}
+
+#해당 위치에 포워딩을 희망하는 포트를 나열해준다.
+$ports=@(8000,443,8080,22);
+
+$addr='0.0.0.0';
+$ports_a = $ports -join ",";
+
+iex "Remove-NetFireWallRule -DisplayName 'WSL 2 Firewall Unlock' ";
+
+iex "New-NetFireWallRule -DisplayName 'WSL 2 Firewall Unlock' -Direction Outbound -LocalPort $ports_a -Action Allow -Protocol TCP";
+iex "New-NetFireWallRule -DisplayName 'WSL 2 Firewall Unlock' -Direction Inbound -LocalPort $ports_a -Action Allow -Protocol TCP";
+
+for( $i = 0; $i -lt $ports.length; $i++ ){
+  $port = $ports[$i];
+  iex "netsh interface portproxy delete v4tov4 listenport=$port listenaddress=$addr";
+  iex "netsh interface portproxy add v4tov4 listenport=$port listenaddress=$addr connectport=$port connectaddress=$remoteport";
+}
+Invoke-Expression "netsh interface portproxy show v4tov4";
+```
+    - $remoteport 및 IP 주소 확인 : wsl의 ifconfig 명령어를 bash로 수행하여 네트워크 정보 획득 후 ip가 있는 경우 $remoteport에 저장
+      포트 설정 : $ports에 배열 형태로 포워딩을 희망하는 포트들을 저장
+      방화벽 규칙 설정 : New-NetFireWaalRule 명령을 이용해 외부 포트 연결 허용
+      포트 포워딩 설정 : netsh interface portproxy 명령을 사용해 windows pc 포트 포워딩 설정
+      포워딩은 $ports 배열에 나열된 포트를 $remoteport의 wsl ip 주소로 연결하는 방식으로 설정
+    - 관리자 권한으로 파일 실행
+
+----------------------------------------------------------------------------
+## 배포
 - 프로젝트 배포 파일 생성
   - Gradle Task
   - name : sbb
   - run : boorJar
-  - /build/libs/sbb-0.0.1-SNAPSHOT.jar
+  - /build/libs/sbb-0.0.3.jar
 - 서버 디렉터리로 업로드 (SFTP)
-  - /home/ubuntu/sbb/sbb-0.0.1-SNAPSHOT.jar
+  - /home/opc/sbb/sbb-0.0.3.jar
 - SSH 실행
-  - /home/ubuntu/sbb > java -jar sbb-0.0.1-SNAPSHOT.jar
+  - /home/opc/sbb > java -jar sbb-0.0.3.jar
     - http://129.154.51.235:8080/
 
-## 백그라운드 서비스
-- nano start.ssh
+### 백그라운드 서비스
+- vi start.sh
 ```bash
 #!/bin/bash
 
 # 배포파일 이름
-JAR=sbb-0.0.1-SNAPSHOT.jar
+JAR=sbb-0.0.3.jar
 # 로그 파일 이름
-LOG=/home/ubuntu/sbb/sbb.log
+LOG=/home/opc/sbb/sbb.log
+
+# 운영 환경일 경우 application.properties 변경
+export spring_profiles_active=prod
 
 # nohup는 프로세스를 실행한 터미널의 연결이 끊어지더라도 프로세스가 지속적으로 동작할 수 있게 해주는 명령어
 # java –jar $JAR는 JAR 변수에 저장된 JAR 파일을 실행하라는 명령어
@@ -108,10 +178,11 @@ LOG=/home/ubuntu/sbb/sbb.log
 # & 기호는 백그라운드로 명령을 실행하라는 의미
 
 nohup java -jar $JAR > $LOG 2>&1 &
+# nohup java -Dspring.profiles.active=prod -jar $JAR > $LOG 2>&1 &
 ```
   - chmod +x start.sh
   - ./start.sh
-- nano stop.sh
+- vi stop.sh
 ```bash
 #!/bin/bash
 
@@ -131,28 +202,19 @@ fi
 ## 서버 환경 파일 생성
 - 시작 옵션으로 ```spring.profiles.active``` 전달
   - application.properties 파일 대신 application-prod.properties을 사용
-```bash
-java -Dspring.profiles.active=prod -jar sbb-0.0.1-SNAPSHOT.jar
-```
 - application-prod.properties
   - # DATABASE
     - spring.h2.console.settings.web-allow-others=true
     - spring.datasource.password=1234
 - build.gradle
-  - version = '0.0.2' -> sbb-0.0.2.jar
-- H2 : ALTER USER sa SET PASSWORD '1234';
-- start.sh
-  - JAR=sbb-0.0.2.jar
-  - nohup java -Dspring.profiles.active=prod -jar $JAR > $LOG 2>&1 &
-- (or) start.sh
-  - export spring_profiles_active=prod
-- ./stop.sh
-- ./start.sh
+  - version = '0.0.3' -> sbb-0.0.3.jar
+- H2
+  - ALTER USER sa SET PASSWORD '1234';
 
 ## Nginx로 80 포트로 서비스 하기
 - sudo apt install nginx
 - cd /etc/nginx/sites-available/
-- sudo nano sbb
+- sudo vi sbb
 ```yaml
 server {
         listen 80;
@@ -174,12 +236,8 @@ server {
 ```
 - cd /etc/nginx/sites-enabled/
   - site-available 디렉터리에 있는 설정 파일 중에서 활성화하고 싶은 것을 링크로 관리하는 디렉터리
-- ls
-  - default
 - sudo rm default
 - sudo ln -s /etc/nginx/sites-available/sbb
-- ls
-  - sbb
 
 ## Nginx 실행
 - cd /etc/nginx/sites-enabled
@@ -188,7 +246,7 @@ server {
   - sudo systemctl start nginx
   - sudo nginx -t
     - nginx 설정 파일 오류 검사
-- http://43.202.195.94
+- http://129.154.51.235
 - if 502 then ./start.sh
 
 ## 로그 관리
