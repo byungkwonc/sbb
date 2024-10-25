@@ -234,19 +234,13 @@ server {
 #    - proxy_pass: 엔진엑스(nginx) 웹 서버가 받은 모든 클라이언트 요청을 http://localhost:8080으로 리다이렉트
 #    - proxy_set_header: 브라우저에서 SBB 서비스를 호출하면 엔진엑스를 통해서 스프링 부트(Spring Boot)의 톰캣(Tomcat) 서버로 요청이 전달된다. proxy_set_header 설정은 이 과정에서 클라이언트의 주소가 실제 IP 주소가 아닌 엔진엑스가 설치된 서버의 주소로 톰캣 서버에 전달되는 것을 방지하기 위해 사용한다.
 ```
-- cd /etc/nginx/sites-enabled/
-  - site-available 디렉터리에 있는 설정 파일 중에서 활성화하고 싶은 것을 링크로 관리하는 디렉터리
+- cd /etc/nginx/sites-enabled/ : site-available 디렉터리에 있는 설정 파일 중에서 활성화하고 싶은 것을 링크로 관리하는 디렉터리
 - sudo rm default
 - sudo ln -s /etc/nginx/sites-available/sbb
 
 ## Nginx 실행
-- cd /etc/nginx/sites-enabled
-- sudo systemctl restart nginx
-  - sudo systemctl stop nginx
-  - sudo systemctl start nginx
-  - sudo nginx -t
-    - nginx 설정 파일 오류 검사
-- http://129.154.51.235
+- sudo systemctl restart nginx / sudo service nginx restart
+- sudo nginx -t : nginx 설정 파일 오류 검사
 - if 502 then ./start.sh
 
 ## 로그 관리
