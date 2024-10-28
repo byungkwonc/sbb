@@ -58,4 +58,8 @@ public class Question {
     // 질문에 대한 댓글
     @OneToMany(mappedBy = "question")
     private List<Comment> commentList;
+
+    // 질문 조회수
+    @Column
+    private Integer readCount;
 }

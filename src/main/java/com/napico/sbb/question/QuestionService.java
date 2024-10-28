@@ -23,6 +23,7 @@ import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 import lombok.RequiredArgsConstructor;
+import org.thymeleaf.util.StringUtils;
 
 @RequiredArgsConstructor
 // final이 붙은 속성을 포함하는 생성자를 자동으로 만들어 주는 역할을 한다.
@@ -41,7 +42,16 @@ public class QuestionService {
         // 리포지터리로 얻은 Question 객체는 Optional 객체이므로 if~else 문을 통해 isPresent 메서드로 해당 데이터(여기서는 id값)가 존재하는지 검사하는 과정이 필요
         Optional<Question> question = this.questionRepository.findById(id);
         if (question.isPresent()) {
-            return question.get();
+            Question question1 = question.get();
+            // 조회수 업데이트 begin
+            if (question1.getReadCount() != null) {
+                question1.setReadCount(question1.getReadCount() + 1);
+            } else {
+                question1.setReadCount(1);
+            }
+            this.questionRepository.save(question1);
+            // 조회수 업데이트 end
+            return question1;
         } else {    // id값에 해당하는 질문 데이터가 없을 경우에는 예외 클래스인 DataNotFoundException이 실행
             throw new DataNotFoundException("question not found");
         }

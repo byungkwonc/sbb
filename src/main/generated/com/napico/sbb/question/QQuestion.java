@@ -36,6 +36,8 @@ public class QQuestion extends EntityPathBase<Question> {
 
     public final DateTimePath<java.time.LocalDateTime> modifyDate = createDateTime("modifyDate", java.time.LocalDateTime.class);
 
+    public final NumberPath<Integer> readCount = createNumber("readCount", Integer.class);
+
     public final StringPath subject = createString("subject");
 
     public final SetPath<com.napico.sbb.user.SiteUser, com.napico.sbb.user.QSiteUser> voter = this.<com.napico.sbb.user.SiteUser, com.napico.sbb.user.QSiteUser>createSet("voter", com.napico.sbb.user.SiteUser.class, com.napico.sbb.user.QSiteUser.class, PathInits.DIRECT2);
