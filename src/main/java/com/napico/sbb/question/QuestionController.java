@@ -2,6 +2,7 @@ package com.napico.sbb.question;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 
 import com.napico.sbb.user.SiteUser;
 import com.napico.sbb.user.UserService;
@@ -40,23 +41,30 @@ public class QuestionController {
     private final QuestionService questionService;
     // 질문한 사용자 조회를 위해 추가
     private final UserService userService;
+    private final CategoryService categoryService;
 
     // 질문 목록
     @GetMapping("/list")                // 클래스 전역 @RequestMapping을 사용하지 않을경우, @GetMapping("/question/list")
         //@ResponseBody                         // java code를 직접 브라우저에 리턴
-    public String list(Model model, @RequestParam(value="page", defaultValue = "1") int page, @RequestParam(value="kw", defaultValue = "") String kw) {
+    public String list(
+            Model model,
+            @RequestParam(value="page", defaultValue = "1") int page,
+            @RequestParam(value="kw", defaultValue = "") String kw,
+            @RequestParam(value="orderby", defaultValue = "1") String orderby,
+            @RequestParam(value="cid", defaultValue = "1") String cid) {
         //return "question list";           // java code를 직접 브라우저에 리턴
 
         // 사용자 로그 작성
         // 로그 레벨(log level) 6단계 : log.trace, log.debug, log.info, log.warn, log.error, log.fatal
-        log.info("page:{}, kw:{}", page, kw);
+        log.info("page:{}, kw:{}, orderby:{}, cid:{}", page, kw, orderby, cid);
 
         // QuestionRepository로 조회한 질문 목록 데이터인 questionList를 생성
         //List<Question> questionList = this.questionRepository.findAll();
         // QuestionService로 조회한 질문 목록 데이터인 questionList를 생성
         //List<Question> questionList = this.questionService.getList();
         // QuestionService로 조회한 질문 목록 페이징 데이터인 questionList를 생성
-        Page<Question> questionList = this.questionService.getList(page-1, kw);
+        Page<Question> questionList = this.questionService.getList(page-1, kw, "jpql", orderby, cid);
+        //Page<Question> questionList = this.questionService.getList(page-1, kw, "spec", orderby, cid);
 
         // 질문 목록 데이터(questionList)는 Model 클래스를 사용하여 "questionList"라는 이름으로 템플릿에 전달
         // Model 객체는 자바 클래스(Java class)와 템플릿(template) 간의 연결 고리 역할을 한다.
@@ -65,6 +73,10 @@ public class QuestionController {
         model.addAttribute("questionList", questionList);
         // 검색 데이터(kw)는 Model 클래스를 사용 하여 "kw"라는 이름으로 템플릿에 전달
         model.addAttribute("kw", kw);
+        // 리스트 순서(orderby)는 Model 클래스를 사용 하여 "orderby"라는 이름으로 템플릿에 전달
+        model.addAttribute("orderby", orderby);
+        // 카테고리 명(categoryName)는 Model 클래스를 사용 하여 "categoryName"라는 이름으로 템플릿에 전달
+        model.addAttribute("categoryid", cid);
 
         // template를 써보자. 템플릿 엔진은 Thymeleaf, Mustache, Groovy, Freemarker, Velocity 등이 있다.
         // 템플릿 파일 이름인 question_list를 리턴
@@ -88,7 +100,9 @@ public class QuestionController {
         // 이 애너테이션을 메서드에 붙이면 해당 메서드는 로그인한 사용자만 호출할 수 있다. @PreAuthorize("isAuthenticated()") 애너테이션이 적용된 메서드가 로그아웃 상태에서 호출되면 로그인 페이지로 강제 이동
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = "/create")
-    public String questionCreate(QuestionForm questionForm) {
+    public String questionCreate(Model model, QuestionForm questionForm, @RequestParam(value="cid", defaultValue = "1") String cid) {
+        model.addAttribute("categoryList", categoryService.getList());
+        model.addAttribute("categoryid", cid);
         return "question_form";
     }
 
@@ -106,40 +120,46 @@ public class QuestionController {
         //    this.questionService.create(subject, content);
         //    return "redirect:/question/list";
         //}
-    public String questionCreate(@Valid QuestionForm questionForm, BindingResult bindingResult, Principal principal) {
+    public String questionCreate(Model model, @Valid QuestionForm questionForm, BindingResult bindingResult, Principal principal) {
         // 질문한 사용자 찾기
         SiteUser siteUser = this.userService.getUser(principal.getName());
+        Category category = this.categoryService.getCategory(Integer.valueOf(questionForm.getCategory()));
         // 에러 나면 다시 질문 페이지로 이동
         if (bindingResult.hasErrors()) {
+            model.addAttribute("categoryList", categoryService.getList());
             return "question_form";
         }
         // 질문 저장
-        this.questionService.create(questionForm.getSubject(), questionForm.getContent(), siteUser);
+        this.questionService.create(questionForm.getSubject(), questionForm.getContent(), category, siteUser);
         // 질문 록록 이동
-        return "redirect:/question/list";
+        return String.format("redirect:/question/list?cid=%s", category.getId());
     }
 
     // 질문 수정하기 (GET : 화면이동 및 원래값 채워 넣기)
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = "/modify/{id}")
-    public String questionModify(QuestionForm questionForm, @PathVariable("id") Integer id, Principal principal) {
+    public String questionModify(Model model, QuestionForm questionForm, @PathVariable("id") Integer id, Principal principal) {
         Question q= this.questionService.getQuestion(id);
         if (!q.getAuthor().getUsername().equals(principal.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "수정권한이 없습니다.");
         }
         questionForm.setSubject(q.getSubject());
         questionForm.setContent(q.getContent());
+        model.addAttribute("categoryList", categoryService.getList());
+        model.addAttribute("categoryid", q.getCategory().getId());
+        log.info("cid:{}", q.getCategory().getId());
         return "question_form";
     }
 
     // 질문 수정하기 (POST : 데이터 수정)
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/modify/{id}")
-    public String questionModify(@Valid QuestionForm questionForm, BindingResult bindingResult, Principal principal, @PathVariable("id") Integer id) {
+    public String questionModify(Model model,@Valid QuestionForm questionForm, BindingResult bindingResult, Principal principal, @PathVariable("id") Integer id) {
         // 질문한 사용자 찾기
         Question q= this.questionService.getQuestion(id);
         // 에러 나면 다시 질문 페이지로 이동
         if (bindingResult.hasErrors()) {
+            model.addAttribute("categoryList", categoryService.getList());
             return "question_form";
         }
         if (!q.getAuthor().getUsername().equals(principal.getName())) {

@@ -62,4 +62,8 @@ public class Question {
     // 질문 조회수
     @Column
     private Integer readCount;
+
+    // 질문 카테고리
+    @ManyToOne
+    private Category category;
 }

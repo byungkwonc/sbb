@@ -8,6 +8,7 @@ import com.napico.sbb.DataNotFoundException;
 import com.napico.sbb.answer.Answer;
 import com.napico.sbb.user.SiteUser;
 
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +24,6 @@ import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 import lombok.RequiredArgsConstructor;
-import org.thymeleaf.util.StringUtils;
 
 @RequiredArgsConstructor
 // final이 붙은 속성을 포함하는 생성자를 자동으로 만들어 주는 역할을 한다.
@@ -58,25 +58,33 @@ public class QuestionService {
     }
 
     // 질문 등록
-    public void create(String subject, String content, SiteUser author) {
+    public void create(String subject, String content, Category categoryId, SiteUser author) {
         Question q = new Question();
         q.setSubject(subject);
         q.setContent(content);
         q.setAuthor(author);
         q.setCreateDate(LocalDateTime.now());
+        q.setCategory(categoryId);
         this.questionRepository.save(q);
     }
 
     // 페이징된 목록 조회
-    public Page<Question> getList(int page, String kw) {
-        List<Sort.Order> sorts = new ArrayList<>();
-        sorts.add(Sort.Order.desc("createDate"));
-        Pageable pageable = PageRequest.of(page, 10, Sort.by(sorts));
-        // Specification을 사용할 경우
-        //Specification<Question> spec = search(kw);
-        //return this.questionRepository.findAll(spec, pageable);
-        // @Query를 사용할 경우
-        return this.questionRepository.findAllByKeyword(kw, pageable);
+    public Page<Question> getList(int page, String kw, String useMethod, String orderby, String categoryId) {
+        if (useMethod.equals("jpql")) {
+            List<Sort.Order> sorts = new ArrayList<>();
+            switch (orderby) {
+                case "1": sorts.add(Sort.Order.desc("createDate"));
+                    break;
+                case "2": sorts.add(Sort.Order.desc("readCount"));
+                    break;
+            }
+            Pageable pageable = PageRequest.of(page, 10, Sort.by(sorts));
+            return this.questionRepository.findAllByKeyword(kw, pageable, categoryId);
+        } else {
+            Pageable pageable = PageRequest.of(page, 10);
+            Specification<Question> spec = search(kw, orderby, categoryId);
+            return this.questionRepository.findAll(spec, pageable);
+        }
     }
 
     // 질문 수정
@@ -99,21 +107,34 @@ public class QuestionService {
     }
 
     // 검색
-    private Specification<Question> search(String kw) {
+    private Specification<Question> search(String kw, String orderby, String categoryId) {
         return new Specification<>() {
             private static final long serialVersionUID = 1L;
             @Override
-            public Predicate toPredicate(Root<Question> q, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+            public Predicate toPredicate(Root<Question> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
                 query.distinct(true);   // 중복제거
-                Join<Question, SiteUser> u1 = q.join("author", JoinType.LEFT);
-                Join<Question, Answer> a = q.join("answerList", JoinType.LEFT);
+                Join<Question, SiteUser> u1 = root.join("author", JoinType.LEFT);
+                Join<Question, Answer> a = root.join("answerList", JoinType.LEFT);
                 Join<Answer, SiteUser> u2 = a.join("author", JoinType.LEFT);
-                return criteriaBuilder.or(
-                        criteriaBuilder.like(q.get("subject"), "%" + kw + "%"),
-                        criteriaBuilder.like(q.get("content"), "%" + kw + "%"),
-                        criteriaBuilder.like(a.get("content"), "%" + kw + "%"),
-                        criteriaBuilder.like(u1.get("username"), "%" + kw + "%"),
-                        criteriaBuilder.like(u2.get("username"), "%" + kw + "%"));
+                Join<Question, Category> c = root.join("category", JoinType.LEFT);
+                switch (orderby) {
+                    case "1":
+                        query.orderBy(criteriaBuilder.desc(root.get("createDate")));
+                        break;
+                    case "2":
+                        query.orderBy(criteriaBuilder.desc(root.get("readCount")));
+                        break;
+                    default:
+                        break;
+                }
+                return  criteriaBuilder.and(
+                            criteriaBuilder.or(
+                                criteriaBuilder.like(root.get("subject"), "%" + kw + "%"),
+                                criteriaBuilder.like(root.get("content"), "%" + kw + "%"),
+                                criteriaBuilder.like(a.get("content"), "%" + kw + "%"),
+                                criteriaBuilder.like(u1.get("username"), "%" + kw + "%"),
+                                criteriaBuilder.like(u2.get("username"), "%" + kw + "%")),
+                        criteriaBuilder.equal(c.get("id"), categoryId));
             }
         };
     }

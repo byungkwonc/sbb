@@ -26,6 +26,8 @@ public class QQuestion extends EntityPathBase<Question> {
 
     public final com.napico.sbb.user.QSiteUser author;
 
+    public final QCategory category;
+
     public final ListPath<com.napico.sbb.comment.Comment, com.napico.sbb.comment.QComment> commentList = this.<com.napico.sbb.comment.Comment, com.napico.sbb.comment.QComment>createList("commentList", com.napico.sbb.comment.Comment.class, com.napico.sbb.comment.QComment.class, PathInits.DIRECT2);
 
     public final StringPath content = createString("content");
@@ -61,6 +63,7 @@ public class QQuestion extends EntityPathBase<Question> {
     public QQuestion(Class<? extends Question> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.author = inits.isInitialized("author") ? new com.napico.sbb.user.QSiteUser(forProperty("author")) : null;
+        this.category = inits.isInitialized("category") ? new QCategory(forProperty("category")) : null;
     }
 
 }
