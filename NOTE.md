@@ -40,6 +40,47 @@ this.questionRepository.save(q2);
 - 하이버네이트는 JPA의 인터페이스를 구현한 실제 클래스이자 자바의 ORM 프레임워크로, 스프링 부트에서 데이터베이스를 관리하기 쉽게 도와준다.
 - 인터페이스(interface)란 클래스가 구현해야 하는 메서드 목록을 정의한 틀이다.
 
+### 1.4. 전체 이해
+```mermaid
+flowchart TB
+  A["ORM <br> (Object-Relational Mapping)"]
+  
+  B["JPA <br> (Java Persistence API) <br> API 표준 명세서 (Interface)"]
+  
+  C["JPA 제공 인터페이스"]
+    C1["<< interface >> <br> Repository"]
+    C2["<< interface >> <br> CRUDRepository"]
+    C3["<< interface >> <br> PagingAndSortingRepository"]
+    C4["<< interface >> <br> JPARepository"]
+  D["JPA의 구현체"]
+    D1["<< framework >> <br> Hibernate"]
+      D11["HQL <br> (Hibernate Query Language)"]
+      D12["JPQL <br> (Java Persistence Query Language)"]
+      D13["Criteria API"]
+    D2["<< framework >> <br> QueryDSL"]
+  
+  A --> B
+  B --> D --> D1
+  B --> C --> C1
+  D2 <-->|함께 사용 가능| D1
+  
+  subgraph 1 [ ]
+    C1 -->|extends| C2 -->|extends| C3 -->|extends| C4
+  end
+  
+  subgraph S2 [ ]
+    subgraph S21 [ ]
+        D1
+        D1 --> D11
+        D1 --> D12
+        D1 --> D13
+    end
+    subgraph S22 [ ]
+        D2
+    end
+  end
+```
+
 --------------------------------------
 ## 2. build.gradle
 

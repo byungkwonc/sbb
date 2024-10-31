@@ -24,15 +24,15 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
-    private SiteUser author;
-
     @Column(columnDefinition = "TEXT")
     private String content;
 
     private LocalDateTime createDate;
 
     private LocalDateTime modifyDate;
+
+    @ManyToOne
+    private SiteUser author;
 
     @ManyToOne
     private Question question;

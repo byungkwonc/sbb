@@ -41,7 +41,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
     Page<Question> findAll(Specification<Question> spec, Pageable pageable);
 
     // 페이징 : 직접 쿼리를 작성할 경우 테이블 기준이 아닌 엔티티 기준으로 작성. 조인은 컬럼명 대신 엔티티의 속성명을 사용
-    // Spring Data JPA : JPQL - @Query에 매개변수는 @Param애너테이션을 사용해야한다. 문자열은 @Query내에서 :kw로 참조된다.
+    // Spring Data JPA : Hibernate > JPQL - @Query에 매개변수는 @Param애너테이션을 사용해야한다. 문자열은 @Query내에서 :kw로 참조된다.
     @Query("select "
             + "distinct q "
             + "from Question q "
