@@ -4,9 +4,15 @@ import com.napico.sbb.DataNotFoundException;
 import com.napico.sbb.question.Question;
 import com.napico.sbb.user.SiteUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -52,5 +58,18 @@ public class AnswerService {
     public void vote(Answer answer, SiteUser voter) {
         answer.getVoter().add(voter);
         this.answerRepository.save(answer);
+    }
+
+    // 답변 리스트
+    public Page<Answer> getList(int page, Question question, String orderby) {
+        List<Sort.Order> sorts = new ArrayList<>();
+        switch (orderby) {
+            case "1": sorts.add(Sort.Order.desc("createDate"));
+                break;
+            case "2": sorts.add(Sort.Order.desc("voter"));
+                break;
+        }
+        Pageable pageable = PageRequest.of(page, 5, Sort.by(sorts));
+        return this.answerRepository.findByQuestion(question, pageable);
     }
 }

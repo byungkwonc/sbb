@@ -4,6 +4,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
+import com.napico.sbb.answer.Answer;
+import com.napico.sbb.answer.AnswerService;
 import com.napico.sbb.user.SiteUser;
 import com.napico.sbb.user.UserService;
 import org.springframework.data.domain.Page;
@@ -42,6 +44,7 @@ public class QuestionController {
     // 질문한 사용자 조회를 위해 추가
     private final UserService userService;
     private final CategoryService categoryService;
+    private final AnswerService answerService;
 
     // 질문 목록
     @GetMapping("/list")                // 클래스 전역 @RequestMapping을 사용하지 않을경우, @GetMapping("/question/list")
@@ -85,9 +88,17 @@ public class QuestionController {
 
     // 질문 상세
     @GetMapping(value = "/detail/{id}")         // 클래스 전역 @RequestMapping을 사용하지 않을경우, @GetMapping(value = "/question/detail/{id}")
-    public String detail(Model model, @PathVariable("id") Integer id, AnswerForm answerForm) {
+    public String detail(
+            Model model,
+            @PathVariable("id") Integer id,
+            AnswerForm answerForm,
+            @RequestParam(value="page", defaultValue = "1") int page,
+            @RequestParam(value="orderby", defaultValue = "1") String orderby) {
         Question question = this.questionService.getQuestion(id);
+        Page<Answer> answerList = this.answerService.getList(page-1, question, orderby);
         model.addAttribute("question", question);
+        model.addAttribute("answerList", answerList);
+        model.addAttribute("orderby", orderby);
         return "question_detail";
     }
 

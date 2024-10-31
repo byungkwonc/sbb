@@ -65,7 +65,7 @@
     <!-- 페이징처리 끝 -->
     <form th:action="@{/question/list}" method="get" id="searchForm">
         <input type="hidden" id="kw" name="kw" th:value="${kw}">
-        <input type="hidden" id="page" name="page" th:value="${questionList.number}">
+        <input type="hidden" id="page" name="page" th:value="${questionList.number+1}">
         <input type="hidden" id="orderby" name="orderby" th:value="${orderby}">
     </form>
 </div>
