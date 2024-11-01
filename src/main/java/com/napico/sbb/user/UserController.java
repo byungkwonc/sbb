@@ -1,5 +1,7 @@
 package com.napico.sbb.user;
 
+import com.napico.sbb.DataNotFoundException;
+import com.napico.sbb.MailException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -64,4 +66,29 @@ public class UserController {
     //      .formLogin((formLogin) -> formLogin
     //          .loginPage("/user/login")
     //          .defaultSuccessUrl("/"))
+
+    // 임시비번
+    @GetMapping("/temp")
+    public String sendTempPassword(PasswordForm passwordForm) {
+        return "password_form";
+    }
+
+    @PostMapping("/temp")
+    public String sendTempPassword(@Valid PasswordForm passwordForm, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "password_form";
+        }
+        try {
+            userService.modifyPassword(passwordForm.getEmail());
+        } catch (MailException e) {
+            e.printStackTrace();
+            bindingResult.reject("fail to send mail", e.getMessage());
+            return "password_form";
+        } catch (DataNotFoundException e) {
+            e.printStackTrace();
+            bindingResult.reject("email not found", e.getMessage());
+            return "password_form";
+        }
+        return "redirect:/";
+    }
 }

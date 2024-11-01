@@ -5,6 +5,7 @@ import com.napico.sbb.question.QuestionService;
 import com.napico.sbb.user.SiteUser;
 import com.napico.sbb.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 
@@ -43,16 +45,29 @@ public class AnswerController {
         // 현재 로그인한 사용자의 정보를 알려면 스프링 시큐리티가 제공하는 Principal 객체를 사용해야 한다. createAnswer 메서드에 Principal 객체를 매개변수로 지정. principal.getName()을 호출하면 현재 로그인한 사용자의 사용자명(사용자ID)을 알 수 있다.
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/create/{id}")
-    public String createAnswer(Model model, @PathVariable("id") Integer id, @Valid AnswerForm answerForm, BindingResult bindingResult, Principal principal) {
+    public String createAnswer(
+            Model model,
+            @PathVariable("id") Integer id,
+            @Valid AnswerForm answerForm,
+            BindingResult bindingResult,
+            Principal principal,
+            @RequestParam(value="answerpage", defaultValue = "1") int page,
+            @RequestParam(value="orderby", defaultValue = "1") String orderby,
+            RedirectAttributes redirectAttributes) {
         // 질문 ID 가져오기
         Question question = this.questionService.getQuestion(id);
         // 질문 사용자 가져오기
         SiteUser siteUser = this.userService.getUser(principal.getName());
+        // 답변 리스트
+        Page<Answer> answerList = this.answerService.getList(page-1, question, orderby);
         if (bindingResult.hasErrors()) {
             model.addAttribute("question", question);
+            model.addAttribute("answerList", answerList);
+            model.addAttribute("orderby", orderby);
             return "question_detail";
         }
         Answer answer = this.answerService.create(question, answerForm.getContent(), siteUser);
+        redirectAttributes.addAttribute("page", page);
         return String.format("redirect:/question/detail/%s#answer_%s", answer.getQuestion().getId(), answer.getId());
     }
 

@@ -90,12 +90,8 @@
                 </div>
             </div>
             <div class="my-3">
-                <a href="javascript:void(0);"
-                   class="recommend btn btn-sm btn-outline-secondary"
-                   th:data-uri="@{|/answer/vote/${answer.id}|}">
-                    추천
-                    <span class="badge rounded-pill bg-success" th:text="${#lists.size(answer.voter)}"></span>
-                </a>
+                <a href="javascript:void(0);" th:data-uri="@{|/answer/vote/${answer.id}|}"
+                   class="recommend btn btn-sm btn-outline-secondary"> 추천 <span class="badge rounded-pill bg-success" th:text="${#lists.size(answer.voter)}"></span></a>
                 <a th:href="@{|/answer/modify/${answer.id}|}"
                    class="btn btn-sm btn-outline-secondary"
                    sec:authorize="isAuthenticated()"
@@ -137,7 +133,7 @@
     </form>
     <!-- 답변 페이징 -->
     <form th:action="@{|/question/detail/${question.id}|}" method="get" id="pageForm">
-        <input type="hidden" id="page" name="page" th:value="${answerList.number+1}">
+        <input type="hidden" id="page" name="page" th:value="${page}">
         <input type="hidden" id="orderby" name="orderby" th:value="${orderby}">
     </form>
 </div>
