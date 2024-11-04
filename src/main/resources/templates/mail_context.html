@@ -5,23 +5,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" type="text/css" href="http://localhost:8080/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
     <!-- sbb CSS -->
-    <link rel="stylesheet" type="text/css" href="http://localhost:8080/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
     <title>Hello, sbb!</title>
 </head>
 <body>
 <!-- 기본 템플릿 안에 삽입될 내용 Start -->
 <div class="container my-3">
-    <h2 class="border-bottom py-2" th:text="비밀번호 변경"></h2>
-    <div class="card my-3">
-        <div class="card-body">
-            <div class="card-text" style="white-space: pre-line;"></div>
-        </div>
-    </div>
+    <h2 class="border-bottom py-2">임시 비밀번호</h2>
+    <div class="mb-3" th:text="${pwd}"></div>
 </div>
 <!-- 기본 템플릿 안에 삽입될 내용 End -->
 <!-- Bootstrap JS -->
-<script src="http://localhost:8080/js/bootstrap.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
 </body>
 </html>
+
+
