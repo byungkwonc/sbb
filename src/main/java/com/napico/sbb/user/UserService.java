@@ -3,6 +3,7 @@ package com.napico.sbb.user;
 import com.napico.sbb.DataNotFoundException;
 import com.napico.sbb.MailException;
 import com.napico.sbb.util.CommonUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.cfg.defs.EmailDef;
@@ -42,12 +43,12 @@ public class UserService {
     }
 
     // 임시 비번 메일 발송
-    public void modifyPassword(String email) throws MailException {
+    public void modifyPassword(String email, String rootUrl) throws MailException {
         String tempPassword = commonUtil.createTempPassword();
         SiteUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException("해당 이메일의 사용자가 없습니다."));
         user.setPassword(passwordEncoder.encode(tempPassword));
         userRepository.save(user);
-        mailService.sendMail(email, tempPassword);
+        mailService.sendMail(email, tempPassword, rootUrl);
     }
 }

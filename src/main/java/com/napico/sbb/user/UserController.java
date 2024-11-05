@@ -2,6 +2,7 @@ package com.napico.sbb.user;
 
 import com.napico.sbb.DataNotFoundException;
 import com.napico.sbb.MailException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -74,12 +75,12 @@ public class UserController {
     }
 
     @PostMapping("/temp")
-    public String sendTempPassword(@Valid PasswordForm passwordForm, BindingResult bindingResult) {
+    public String sendTempPassword(@Valid PasswordForm passwordForm, BindingResult bindingResult, HttpServletRequest request) {
         if (bindingResult.hasErrors()) {
             return "password_form";
         }
         try {
-            userService.modifyPassword(passwordForm.getEmail());
+            userService.modifyPassword(passwordForm.getEmail(), request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort());
         } catch (MailException e) {
             e.printStackTrace();
             bindingResult.reject("fail to send mail", e.getMessage());
