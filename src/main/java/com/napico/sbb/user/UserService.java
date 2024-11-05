@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -43,12 +44,18 @@ public class UserService {
     }
 
     // 임시 비번 메일 발송
-    public void modifyPassword(String email, String rootUrl) throws MailException {
+    public void sendTempPassword(String email, String rootUrl) throws MailException {
         String tempPassword = commonUtil.createTempPassword();
         SiteUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException("해당 이메일의 사용자가 없습니다."));
         user.setPassword(passwordEncoder.encode(tempPassword));
         userRepository.save(user);
         mailService.sendMail(email, tempPassword, rootUrl);
+    }
+
+    // 비번 변경
+    public void modifyPassword(SiteUser siteUser, String password) {
+        siteUser.setPassword(passwordEncoder.encode(password));
+        this.userRepository.save(siteUser);
     }
 }

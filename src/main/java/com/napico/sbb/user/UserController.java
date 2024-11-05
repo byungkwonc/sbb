@@ -6,13 +6,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.naming.Binding;
+import java.security.Principal;
 
 @RequiredArgsConstructor
 @Controller
@@ -20,6 +24,7 @@ import javax.naming.Binding;
 public class UserController {
 
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
     // 회원 가입을 위한 템플릿 렌더링
     @GetMapping("/signup")
@@ -40,7 +45,7 @@ public class UserController {
         }
 
         try {
-            userService.create(userForm.getUsername(), userForm.getEmail(), userForm.getPassword1());
+            this.userService.create(userForm.getUsername(), userForm.getEmail(), userForm.getPassword1());
         }catch(DataIntegrityViolationException e) {
             e.printStackTrace();
             bindingResult.reject("signupFailed", "이미 등록된 사용자 입니다.");
@@ -80,7 +85,7 @@ public class UserController {
             return "password_form";
         }
         try {
-            userService.modifyPassword(passwordForm.getEmail(), request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort());
+            this.userService.sendTempPassword(passwordForm.getEmail(), request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort());
         } catch (MailException e) {
             e.printStackTrace();
             bindingResult.reject("fail to send mail", e.getMessage());
@@ -91,5 +96,60 @@ public class UserController {
             return "password_form";
         }
         return "redirect:/";
+    }
+
+    // 비밀번호 변경 폼
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/modify")
+    public String modifyPassword(Model model, ModifyPasswordForm modifyPasswordForm, Principal principal) {
+        SiteUser siteUser = this.userService.getUser(principal.getName());
+        model.addAttribute("userid", siteUser.getUsername());
+        return "modify_form";
+    }
+
+    // 비밀번호 변경 액션
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/modify")
+    public String modifyPassword(Model model, @Valid ModifyPasswordForm modifyPasswordForm, BindingResult bindingResult, Principal principal) {
+
+        SiteUser siteUser = this.userService.getUser(principal.getName());
+
+        if (!modifyPasswordForm.getUserid().equals(principal.getName())) {
+            bindingResult.rejectValue("password", "useridInCorrect", "회원정보가 일치하지 않습니다.");
+            model.addAttribute("userid", siteUser.getUsername());
+            return "modify_form";
+        }
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("userid", siteUser.getUsername());
+            return "modify_form";
+        }
+
+        if (!passwordEncoder.matches(modifyPasswordForm.getPassword(), siteUser.getPassword())) {
+            bindingResult.rejectValue("password", "passwordInCorrect", principal.getName() + "님의" + siteUser.getPassword() + "와 " + modifyPasswordForm.getPassword() + " 패스워드가 일치하지 않습니다.");
+            model.addAttribute("userid", siteUser.getUsername());
+            return "modify_form";
+        }
+
+        if (!modifyPasswordForm.getPassword1().equals(modifyPasswordForm.getPassword2())) {
+            bindingResult.rejectValue("password2", "passwordInCorrect", "두개의 패스워드가 일치하지 않습니다.");
+            model.addAttribute("userid", siteUser.getUsername());
+            return "modify_form";
+        }
+
+        try {
+            this.userService.modifyPassword(siteUser, modifyPasswordForm.getPassword1());
+        } catch (DataIntegrityViolationException e) {
+            e.printStackTrace();
+            bindingResult.reject("modifyFailed", "이미 등록된 사용자 입니다.");
+            model.addAttribute("userid", siteUser.getUsername());
+            return "modify_form";
+        } catch (Exception e) {
+            e.printStackTrace();
+            bindingResult.reject("modifyFailed", e.getMessage());
+            model.addAttribute("userid", siteUser.getUsername());
+            return "modify_form";
+        }
+        return "redirect:/user/logout";
     }
 }
