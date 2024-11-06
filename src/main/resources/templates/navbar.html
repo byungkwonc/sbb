@@ -9,11 +9,12 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
                     <a class="nav-link" sec:authorize="isAnonymous()" th:href="@{/user/login}">로그인</a>
-                    <a class="nav-link" sec:authorize="isAuthenticated()" th:href="@{/user/logout}">로그아웃</a>
+                    <a class="nav-link" sec:authorize="isAnonymous()" th:href="@{/user/signup}">회원가입</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" sec:authorize="isAnonymous()" th:href="@{/user/signup}">회원가입</a>
+                    <a class="nav-link" sec:authorize="isAuthenticated()" th:href="@{/user/logout}">로그아웃</a>
                     <a class="nav-link" sec:authorize="isAuthenticated()" th:href="@{/user/modify}">비밀번호변경</a>
+                    <a class="nav-link" sec:authorize="isAuthenticated()" th:href="@{/user/profile}">프로필</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/question/list?cid=1}">질문 게시판</a>

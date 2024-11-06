@@ -8,7 +8,6 @@ import com.napico.sbb.DataNotFoundException;
 import com.napico.sbb.answer.Answer;
 import com.napico.sbb.user.SiteUser;
 
-import jakarta.validation.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -137,5 +136,16 @@ public class QuestionService {
                         criteriaBuilder.equal(c.get("id"), categoryId));
             }
         };
+    }
+
+    // 사용자 프로필 - 최근 게시글
+    public List<Question> getQuestionListByUser(String username, int pageSize) {
+        Pageable pageable = PageRequest.of(0, pageSize);
+        return this.questionRepository.findCurrentQuestion(username,pageable);
+    }
+
+    // 사용자 프로필 - 전체 게시글 수
+    public Long getQuestionCountByUser(String username) {
+        return this.questionRepository.findCurrentQuestionCount(username);
     }
 }

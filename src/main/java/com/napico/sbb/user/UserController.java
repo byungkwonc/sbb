@@ -2,6 +2,9 @@ package com.napico.sbb.user;
 
 import com.napico.sbb.DataNotFoundException;
 import com.napico.sbb.MailException;
+import com.napico.sbb.answer.AnswerService;
+import com.napico.sbb.comment.CommentService;
+import com.napico.sbb.question.QuestionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import javax.naming.Binding;
 import java.security.Principal;
 
 @RequiredArgsConstructor
@@ -25,6 +27,9 @@ public class UserController {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final QuestionService questionService;
+    private final AnswerService answerService;
+    private final CommentService commentService;
 
     // 회원 가입을 위한 템플릿 렌더링
     @GetMapping("/signup")
@@ -151,5 +156,20 @@ public class UserController {
             return "modify_form";
         }
         return "redirect:/user/logout";
+    }
+
+    // 프로필
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/profile")
+    public String getProfile(Model model, Principal principal) {
+        String username = principal.getName();
+        model.addAttribute("username", username);
+        model.addAttribute("questionList", questionService.getQuestionListByUser(username, 5));
+        model.addAttribute("questionCount", questionService.getQuestionCountByUser(username));
+        model.addAttribute("answerList", answerService.getAnswerListByUser(username, 5));
+        model.addAttribute("answerCount", answerService.getAnswerCountByUser(username));
+        model.addAttribute("commentList", commentService.getCommentListByUser(username, 5));
+        model.addAttribute("commentCount", commentService.getCommentCountByUser(username));
+        return "profile";
     }
 }

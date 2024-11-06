@@ -72,4 +72,15 @@ public class AnswerService {
         Pageable pageable = PageRequest.of(page, 5, Sort.by(sorts));
         return this.answerRepository.findByQuestion(question, pageable);
     }
+
+    // 사용자 프로필 - 최근 답변
+    public List<Answer> getAnswerListByUser(String username, int pageSize) {
+        Pageable pageable = PageRequest.of(0, pageSize);
+        return this.answerRepository.findCurrentAnswer(username,pageable);
+    }
+
+    // 사용자 프로필 - 전체 답변 수
+    public Long getAnswerCountByUser(String username) {
+        return this.answerRepository.findCurrentAnswerCount(username);
+    }
 }
