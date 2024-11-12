@@ -24,8 +24,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: '587'
-    username: byungkwonc@gmail.com
-    password: mcemyoifwftyomnz
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         starttls:
@@ -37,10 +37,10 @@ spring:
       debug: 'true'
 
   datasource:
-    url: jdbc:h2:~/local
     driverClassName: org.h2.Driver
-    password: 1234
-    username: sa
+    password: ${H2_PASSWORD_PROD}
+    username: ${H2_USERNAME_PROD}
+    url: ${H2_URL_PROD}
 
   thymeleaf:
     cache: 'false'

@@ -17,8 +17,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: '587'
-    username: byungkwonc@gmail.com
-    password: mcemyoifwftyomnz
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       debug: 'true'
       mail:
@@ -31,9 +31,9 @@ spring:
 
   datasource:
     driverClassName: org.h2.Driver
-    password: ''
-    username: sa
-    url: jdbc:h2:~/github/sbb/local
+    password: ${H2_PASSWORD_DEV}
+    username: ${H2_USERNAME_DEV}
+    url: ${H2_URL_DEV}
 
   h2:
     console:
@@ -50,15 +50,15 @@ spring:
       client:
         registration:
           google:
-            client-id: 69177313195-nvra3dfmsr77cahcdrbilf2l0u2t2kpm.apps.googleusercontent.com  # ?? ?? Client ID ${GOOGLE_CLIENT}
-            client-secret: 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  # ?? ?? Client Secret ${GOOGLE_SECRET}
+            client-id: ${GOOGLE_CLIENT}
+            client-secret: ${GOOGLE_SECRET}
             scope: # ?? ? openid,profile,email => profile, email ? ?? ??. openid? scope? ??? Open Id Provider? ??
               - profile
               - email
 
           naver:
-            client-id: # ?? ?? Client ID ${NAVER_CLIENT}
-            client-secret: # ?? ?? Client Secret ${NAVER_SECRET}
+            client-id: ${NAVER_CLIENT}
+            client-secret: ${NAVER_SECRET}
             client-authentication-method: client_secret_post  # ?? ??? ??? ??? ??? ? ??? ??
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/{action}/oauth2/code/{registrationId}"
@@ -69,8 +69,8 @@ spring:
             client-name: Naver
 
           kakao:
-            client-id: # ?? ?? Client ID ${KAKAO_CLIENT}
-            client-secret: # ?? ?? Client Secret  ${KAKAO_SECRET}
+            client-id: ${KAKAO_CLIENT}
+            client-secret: ${KAKAO_SECRET}
             client-authentication-method: client_secret_post  # ?? ??? ??? ??? ??? ? ??? ??
             authorization-grant-type: authorization_code
             scope: # https://developers.kakao.com/docs/latest/ko/kakaologin/common#user-info
