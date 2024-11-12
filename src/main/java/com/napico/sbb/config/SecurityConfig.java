@@ -28,25 +28,16 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 인증되지 않은 모든 페이지의 요청을 허락
-            .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
-                .requestMatchers(new AntPathRequestMatcher("/**")).permitAll())
-                // H2 console의 CSRF 허용
-            .csrf((csrf) -> csrf
-                .ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**")))
-                // 프레임으로 구성된 URL 요청 시 X-Frame-Options 헤더를 DENY 대신 SAMEORIGIN으로 설정
-            .headers((headers) -> headers
-                .addHeaderWriter(new XFrameOptionsHeaderWriter(
-                    XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
-                // 로그인 페이지의 URL은 /user/login이고, 로그인 성공시 루트(/)로 이동
-            .formLogin((formLogin) -> formLogin
-                .loginPage("/user/login")
-                .defaultSuccessUrl("/"))
-                // 로그아웃 시 생성된 사용자 세션 삭제 후 루트(/) 이동
-            .logout((logout) -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/user/logout"))
-                .logoutSuccessUrl("/")
-                .invalidateHttpSession(true))
+            // 인증되지 않은 모든 페이지의 요청을 허락
+            .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers(new AntPathRequestMatcher("/**")).permitAll())
+            // H2 console의 CSRF 허용
+            .csrf((csrf) -> csrf.ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**")))
+            // 프레임으로 구성된 URL 요청 시 X-Frame-Options 헤더를 DENY 대신 SAMEORIGIN으로 설정
+            .headers((headers) -> headers.addHeaderWriter(new XFrameOptionsHeaderWriter(XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
+            // 로그인 페이지의 URL은 /user/login이고, 로그인 성공시 루트(/)로 이동
+            .formLogin((formLogin) -> formLogin.loginPage("/user/login").defaultSuccessUrl("/"))
+            // 로그아웃 시 생성된 사용자 세션 삭제 후 루트(/) 이동
+            .logout((logout) -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/user/logout")).logoutSuccessUrl("/").invalidateHttpSession(true))
         ;
         return http.build();
     }

@@ -1,0 +1,83 @@
+server:
+  address: 127.0.0.1
+  port: '8080'
+#  servlet:
+#    encoding:
+#      enabled: 'true'
+#      force: 'true'
+#      charset: UTF-8
+#    context-path: /toy
+  tomcat:
+    basedir: .
+    accesslog:
+      enabled: 'true'
+      suffix: .log
+      prefix: access_log
+      file-date-format: .yyyy-MM-dd
+      pattern: '%h %{yyyy-MM-dd HH:mm:ss}t %s %r %{User-Agent}i %{Referer}i %a %b %D'
+      directory: logs
+
+spring:
+  application:
+    name: sbb
+
+  mail:
+    host: smtp.gmail.com
+    port: '587'
+    username: byungkwonc@gmail.com
+    password: mcemyoifwftyomnz
+    properties:
+      mail:
+        starttls:
+          enable: 'true'
+        smtp:
+          auth: 'true'
+          connectiontimeout: '1000'
+          debug: 'true'
+      debug: 'true'
+
+  datasource:
+    url: jdbc:h2:~/local
+    driverClassName: org.h2.Driver
+    password: 1234
+    username: sa
+
+  thymeleaf:
+    cache: 'false'
+    suffix: .html
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+#      naming:
+#        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: 'true'
+        show_sql: 'true'
+
+  h2:
+    console:
+      path: /h2-console
+      enabled: 'true'
+      settings:
+        web-allow-others: 'true'
+
+logging:
+  logback:
+    rollingpolicy:
+      max-history: '30'
+      file-name-pattern: ${LOG_FILE}.%d{yyyy-MM-dd}-%i.log
+      max-file-size: 100MB
+  file:
+    name: logs/sbb.log
+  pattern:
+    dateformat: yyyy-MM-dd HH:mm:ss.SSS,Asia/Seoul
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql: trace
